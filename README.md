@@ -19,23 +19,42 @@ A standalone, networked rate-limiting service — not a library you `import`, a 
 ## 2. Architecture
 
 ```
-                        ┌──────────────────────────┐
-                        │        TOLLGATE           │
-                        │                            │
-  Client ──GET /check──▶│  routes/check.ts           │
-                        │      │                      │
-                        │      ▼                      │
-                        │  loadScript() ──EVALSHA──▶ Redis
-                        │      │                      │   ├─ bucket:{id}   (hash)
-                        │      ▼                      │   └─ sw:{id}       (sorted set)
-                        │  headers + ALLOW/DENY        │
-  Client ◀───────────────      │                      │
-                        │                            │
-  Operator ──PUT/GET──▶ │  routes/admin.ts           │
-     /admin/clients/:id │      │                      │
-                        │      ▼                      │
-                        │  Redis: config:{id} (string)│
-                        └──────────────────────────┘
+┌────────────────────────────────────────────────────────────────┐
+│                     TOLLGATE SERVICE                            │
+├────────────────────────────────────────────────────────────────┤
+│                                                                │
+│  DATA PLANE (check)                                           │
+│  ───────────────────                                           │
+│                                                                │
+│   Client              GET /check/:clientId                     │
+│     │                         │                                │
+│     ├────────────────────────→ routes/check.ts                 │
+│     │                         │                                │
+│     │                         ├─→ Lua script (EVALSHA)         │
+│     │                         │       ↓                         │
+│     │                         │   Redis (state)                │
+│     │                         │   ├─ bucket:{id} (hash)        │
+│     │                         │   └─ sw:{id} (sorted set)      │
+│     │                         │       ↓                         │
+│     ├─────────────────────────┤ response + headers             │
+│     │ (X-RateLimit-*, 200/429)│                                │
+│                                                                │
+│  CONTROL PLANE (admin)                                         │
+│  ──────────────────────                                        │
+│                                                                │
+│   Operator        PUT|GET /admin/clients/:clientId             │
+│     │                         │                                │
+│     ├────────────────────────→ routes/admin.ts                 │
+│     │                         │                                │
+│     │                         ├─→ Redis (config)               │
+│     │                         │   └─ config:{id} (string)      │
+│     │                         │       ↓                         │
+│     ├─────────────────────────┤ response                       │
+│                                                                │
+│  ★ Config changes take effect on next check (no service restart)│
+│  ★ Two planes talk only through Redis (independent scaling)    │
+│                                                                │
+└────────────────────────────────────────────────────────────────┘
 ```
 
 **Data plane:** `check.ts` → Lua script → Redis state → response + headers.
