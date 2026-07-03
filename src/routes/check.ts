@@ -49,7 +49,7 @@ router.get('/:clientId', async (req: Request, res: Response) => {
             remaining = result[1] ?? 0;
             reset = result[2] ?? 0;     
         } else {
-            const scriptSha = await loadScript('token-bucket');
+            const scriptSha = await loadScript('tokenBucket');
             const result = await redisClient.evalSha(scriptSha, {
                 keys: [`client:${clientId}:token-bucket`],
                 arguments: [current_time, config.requestPerSecond, config.burstSize].map(String)
