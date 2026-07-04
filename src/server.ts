@@ -15,4 +15,8 @@ connectRedis().then(() => {
     app.listen(PORT, () => {
         console.log(`Tollgate is running on port ${PORT}`);
     });
+})
+.catch((err) => {
+    console.error('Failed to connect to Redis:', err);
+    process.exit(1);
 });

@@ -9,7 +9,15 @@ if (!redisUrl) {
   throw new Error("REDIS_URL missing");
 }
 
-const redisClient = createClient({ url: redisUrl });
+const redisClient = createClient({ url: redisUrl , socket:{
+    connectTimeout: 5000,
+    reconnectStrategy: (retries) => {
+        if (retries > 3) {
+            return new Error("Maximum retries exceeded");
+        }
+        return Math.min(1000 * Math.pow(2, retries), 10000);
+    }}
+});
 
 // load the script LUA scripts sha once at startup , reuse via EVALSHA
 const scriptShaMap: Record<string, string> = {};
