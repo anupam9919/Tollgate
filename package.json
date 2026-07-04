@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "ts-node-dev --respawn src/server.ts",
     "build": "tsc",
-    "start": "node dist/server.js"
+    "start": "node dist/server.js",
+    "typecheck:loadtest": "tsc --noEmit -p tsconfig.loadtest.json"
   },
   "repository": {
     "type": "git",
@@ -27,6 +28,7 @@
   },
   "devDependencies": {
     "@types/express": "^5.0.6",
+    "@types/k6": "^2.0.0",
     "@types/node": "^26.1.0",
     "ts-node-dev": "^2.0.0",
     "typescript": "^6.0.3"
