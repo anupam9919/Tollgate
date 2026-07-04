@@ -76,8 +76,13 @@ src/
 ├── lua/
 │   ├── tokenBucket.lua       # Atomic refill + spend (hash: tokens, lastRefill)
 │   └── slidingWindow.lua     # Atomic evict + count + record (sorted set)
-└── test/
-    └── (Postman collection: tollgate.postman_collection.json)
+└── loadtest/
+    ├── config.ts             # Shared BASE_URL, client IDs, pool helpers
+    ├── metrics/
+    │   └── rate-limit-metrics.ts # k6 counters + theoretical-max scaffold
+    └── scenarios/
+        ├── singleClient.ts    # Shared-client contention test
+        └── multiClient.ts     # Multi-client throughput + isolation test
 ```
 
 **Why Lua lives in its own folder, loaded by SHA:** every check is read-modify-write on shared state. Doing that in application code means a race between two concurrent requests for the same client. Lua scripts run atomically inside Redis's single-threaded execution — the whole read-modify-write happens as one uninterruptible step. `EVALSHA` (vs sending the script text every time) avoids re-parsing Lua on every request.
@@ -103,7 +108,7 @@ src/
 |---|---|---|
 | 1 | Core server, single algorithm, race-safe | ✅ Complete |
 | 2 | Configurability, second algorithm, feedback headers | 🔶 In progress |
-| 3 | Proof under load (500+ req/s) | Planned |
+| 3 | Proof under load (500+ req/s) | 🔶 In progress |
 | 4 | Distributed mode (stretch) | Planned |
 | 5 | Observability / dashboard (stretch) | Planned |
 
@@ -111,6 +116,79 @@ src/
 
 ## 6. Testing
 
-- **Functional:** `tollgate.postman_collection.json` — admin config set/get, check under both algorithms, header inspection
-- **Concurrency:** k6, deferred to Milestone 3 — the only test that actually proves the atomicity claims above rather than assuming them
-- **Manual sanity check:** rapid-fire `GET /check/:clientId` in Postman Runner, watch `Remaining` count down and `429` appear on schedule
+### Service contract
+
+- `GET /check/:clientId` runs the limiter for one client and returns `200` when allowed or `429` when denied.
+- `PUT /admin/clients/:clientId` stores the config used by the next `/check` call.
+- `GET /admin/clients/:clientId` reads the stored config back.
+
+### Admin request body
+
+The server expects JSON in this shape:
+
+```json
+{
+    "algorithm": "token-bucket" | "sliding-window",
+    "requestPerSecond": 1,
+    "burstSize": 20,
+    "windowSize": 6000
+}
+```
+
+`windowSize` is in milliseconds. If no config exists for a client, the server falls back to the default token-bucket settings in `src/routes/check.ts`.
+
+### Response headers
+
+- `X-RateLimit-Limit`
+- `X-RateLimit-Remaining`
+- `X-RateLimit-Reset`
+
+### k6 setup
+
+Tollgate's load tests use k6 native TypeScript support. Since k6 v0.57, `.ts` files run directly with no bundler or build step, but type-checking is still separate.
+
+```bash
+npm install
+npm run typecheck:loadtest
+```
+
+The repository already includes the TypeScript loadtest config in `tsconfig.loadtest.json`, which covers `loadtest/**/*.ts`.
+
+### Loadtest files
+
+- `loadtest/config.ts` centralizes `BASE_URL`, the single-client ID, and the multi-client pool helper.
+- `loadtest/scenarios/singleClient.ts` is the contention test for one shared Redis key.
+- `loadtest/scenarios/multiClient.ts` is the throughput and client-isolation test.
+- `loadtest/metrics/rate-limit-metrics.ts` records allow/deny counts and contains the theoretical-max check scaffold.
+
+### Running locally
+
+Make sure Redis is available, `REDIS_URL` is set for the Tollgate server, and the app is listening on port `3000`.
+
+```bash
+# start the service
+npm run dev
+
+# configure the single-client test target
+curl --location --request PUT 'http://localhost:3000/admin/clients/loadtest-single-client' \
+    --header 'Content-Type: application/json' \
+    --data '{
+        "algorithm": "token-bucket",
+        "requestPerSecond": 1,
+        "burstSize": 20,
+        "windowSize": 6000
+    }'
+
+# run the Milestone 3 scenarios
+k6 run loadtest/scenarios/singleClient.ts
+k6 run loadtest/scenarios/multiClient.ts
+```
+
+### What each scenario proves
+
+- `singleClient.ts` is the correctness test. Many VUs hit the same `clientId`, so it can reveal double-spend bugs in the Lua atomicity path.
+- `multiClient.ts` is the throughput and isolation test. It checks that aggregate traffic stays high and that one client's requests do not leak into another client's bucket.
+
+### Correctness gate
+
+`metrics/rate-limit-metrics.ts` is where the run should compare `tollgate_allow_total` against the theoretical maximum for the configured limits and wall-clock duration. Once that check is wired into `handleSummary()`, the k6 run should exit non-zero if the limiter ever allows more than the math permits.
