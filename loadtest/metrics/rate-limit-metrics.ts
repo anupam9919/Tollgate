@@ -50,7 +50,7 @@ export interface TheoreticalMaxResult {
 }
 
 /**
- * TODO (yours to implement):
+ * Computes the theoretical maximum number of ALLOWs for a given client over a test duration.
  *
  * Given:
  *   - the configured rps/burst for a client (whatever you set via
@@ -74,6 +74,20 @@ export interface TheoreticalMaxResult {
  * signal that tokens were double-spent under concurrency.
  */
 export function computeTheoreticalMaxAllows(_params: TheoreticalMaxParams): TheoreticalMaxResult {
-  throw new Error('computeTheoreticalMaxAllows() not implemented yet — see TODO above');
+  const { rps, burst, durationSeconds, actualAllows } = _params;
+
+  // Token bucket: you start with `burst` tokens, then earn `rps` per second.
+  // Over the full test duration the absolute maximum that could ever be allowed is:
+  //   burst (initial fill) + rps * durationSeconds (tokens earned over time)
+  // This is a ceiling — in practice fewer will be allowed because VUs exhaust
+  // the bucket faster than it refills.
+
+  const expectedMax = burst + Math.floor(rps * durationSeconds);
+
+  return {
+    expectedMax,
+    actual: actualAllows,
+    passed: actualAllows <= expectedMax
+  };
 }
 

@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-smoke:
+    runs-on: ubuntu-latest
+
+    services:
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+      - run: npm run build
+      - run: npm run typecheck:loadtest
+
+      - name: Start Tollgate
+        run: npm start &
+        env:
+          REDIS_URL: redis://localhost:6379
+          PORT: 3000
+
+      - name: Wait for server
+        run: npx wait-on http://localhost:3000/check/smoke-test --timeout 15000
+
+      - name: Smoke test — data plane
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/check/smoke-test)
+          echo "GET /check/smoke-test → $STATUS"
+          [[ "$STATUS" == "200" || "$STATUS" == "429" ]] || exit 1
+
+      - name: Smoke test — control plane (PUT)
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            -X PUT http://localhost:3000/admin/clients/smoke-test \
+            -H "Content-Type: application/json" \
+            -d '{"algorithm":"token-bucket","requestPerSecond":5,"burstSize":10,"windowSize":60000}')
+          echo "PUT /admin/clients/smoke-test → $STATUS"
+          [[ "$STATUS" == "200" ]] || exit 1
+
+      - name: Smoke test — control plane (GET)
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            http://localhost:3000/admin/clients/smoke-test)
+          echo "GET /admin/clients/smoke-test → $STATUS"
+          [[ "$STATUS" == "200" ]] || exit 1

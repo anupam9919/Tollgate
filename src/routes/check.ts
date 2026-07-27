@@ -57,7 +57,7 @@ router.get('/:clientId', async (req: Request, res: Response) => {
 
             allowed = result[0] === 1;
             remaining = result[1] ?? 0;
-            reset = result[2] ?? 0;
+            reset = result[3] ?? 0;
         }
     } catch (err) {
         console.error(`rate-limit check failed for ${clientId}:`, err);

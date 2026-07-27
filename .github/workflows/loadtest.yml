@@ -1,0 +1,65 @@
+name: Load test (correctness gate)
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 2 * * *'   # optional nightly run at 2am UTC
+
+jobs:
+  loadtest:
+    runs-on: ubuntu-latest
+
+    services:
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+      - run: npm run build
+
+      - name: Install k6
+        run: |
+          curl https://github.com/grafana/k6/releases/download/v0.57.0/k6-v0.57.0-linux-amd64.tar.gz \
+            -L -o k6.tar.gz
+          tar -xzf k6.tar.gz
+          sudo mv k6-v0.57.0-linux-amd64/k6 /usr/local/bin/k6
+          k6 version
+
+      - name: Start Tollgate
+        run: npm start &
+        env:
+          REDIS_URL: redis://localhost:6379
+          PORT: 3000
+
+      - name: Wait for server
+        run: npx wait-on http://localhost:3000/check/smoke-test --timeout 15000
+
+      - name: Configure single-client test target
+        run: |
+          curl -X PUT http://localhost:3000/admin/clients/loadtest-single-client \
+            -H "Content-Type: application/json" \
+            -d '{"algorithm":"token-bucket","requestPerSecond":50,"burstSize":100,"windowSize":60000}'
+
+      - name: Run single-client contention test
+        run: k6 run loadtest/scenarios/singleClient.ts
+        env:
+          BASE_URL: http://localhost:3000
+
+      - name: Run multi-client throughput + isolation test
+        run: k6 run loadtest/scenarios/multiClient.ts
+        env:
+          BASE_URL: http://localhost:3000

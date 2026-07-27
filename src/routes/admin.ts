@@ -12,9 +12,9 @@ interface AdminRequestBody{
 
 function validateAdminRequestBody(body: any):body is AdminRequestBody{
     return(
-        body.algorithm === 'token-bucket' || body.algorithm === 'sliding-window',
-        typeof body.requestPerSecond === 'number' && body.requestPerSecond > 0,
-        typeof body.burstSize === 'number' && body.burstSize > 0,
+        (body.algorithm === 'token-bucket' || body.algorithm === 'sliding-window') &&
+        typeof body.requestPerSecond === 'number' && body.requestPerSecond > 0 &&
+        typeof body.burstSize === 'number' && body.burstSize > 0 &&
         typeof body.windowSize === 'number' && body.windowSize > 0
     )
 }
