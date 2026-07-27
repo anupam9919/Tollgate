@@ -3,7 +3,7 @@ name: Load test (correctness gate)
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 2 * * *'   # optional nightly run at 2am UTC
+    - cron: '0 2 * * *'
 
 jobs:
   loadtest:
@@ -33,20 +33,22 @@ jobs:
 
       - name: Install k6
         run: |
-          curl https://github.com/grafana/k6/releases/download/v0.57.0/k6-v0.57.0-linux-amd64.tar.gz \
-            -L -o k6.tar.gz
+          curl -L https://github.com/grafana/k6/releases/download/v0.57.0/k6-v0.57.0-linux-amd64.tar.gz \
+            -o k6.tar.gz
           tar -xzf k6.tar.gz
           sudo mv k6-v0.57.0-linux-amd64/k6 /usr/local/bin/k6
           k6 version
 
       - name: Start Tollgate
-        run: npm start &
+        run: |
+          npm start > /tmp/tollgate.log 2>&1 &
+          echo $! > /tmp/tollgate.pid
         env:
           REDIS_URL: redis://localhost:6379
           PORT: 3000
 
       - name: Wait for server
-        run: npx wait-on http://localhost:3000/check/smoke-test --timeout 15000
+        run: npx wait-on http://localhost:3000/health --timeout 20000
 
       - name: Configure single-client test target
         run: |
@@ -59,7 +61,11 @@ jobs:
         env:
           BASE_URL: http://localhost:3000
 
-      - name: Run multi-client throughput + isolation test
+      - name: Run multi-client isolation test
         run: k6 run loadtest/scenarios/multiClient.ts
         env:
           BASE_URL: http://localhost:3000
+
+      - name: Dump server log on failure
+        if: failure()
+        run: cat /tmp/tollgate.log

@@ -42,4 +42,9 @@ async function connectRedis(): Promise<RedisClientType> {
     return redisClient;
 }
 
+export function getRedisClient() {
+    if (!redisClient) throw new Error('Redis client not initialised — call connectRedis() first');
+    return redisClient;
+}
+
 export { redisClient, connectRedis, loadScript };
