@@ -27,7 +27,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
 
       - run: npm ci
@@ -44,13 +44,6 @@ jobs:
       - name: Wait for server
         run: npx wait-on http://localhost:3000/health --timeout 20000
 
-      - name: Smoke test — data plane
-        run: |
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-            http://localhost:3000/check/smoke-test)
-          echo "GET /check/smoke-test → $STATUS"
-          [[ "$STATUS" == "200" || "$STATUS" == "429" || "$STATUS" == "404" ]] || exit 1
-
       - name: Smoke test — PUT client config
         run: |
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
@@ -66,6 +59,20 @@ jobs:
             http://localhost:3000/admin/clients/smoke-test)
           echo "GET /admin/clients/smoke-test → $STATUS"
           [[ "$STATUS" == "200" ]] || exit 1
+
+      - name: Smoke test — data plane (configured client)
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            http://localhost:3000/check/smoke-test)
+          echo "GET /check/smoke-test → $STATUS"
+          [[ "$STATUS" == "200" || "$STATUS" == "429" ]] || exit 1
+
+      - name: Smoke test — data plane (unknown client returns 404)
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            http://localhost:3000/check/unknown-client-xyz)
+          echo "GET /check/unknown-client-xyz → $STATUS"
+          [[ "$STATUS" == "404" ]] || exit 1
 
       - name: Dump server log on failure
         if: failure()
