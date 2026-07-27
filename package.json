@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "ts-node-dev --respawn src/server.ts",
-    "build": "tsc",
+    "build": "tsc && cp -r src/lua dist/lua",
     "start": "node dist/server.js",
     "typecheck:loadtest": "tsc --noEmit -p tsconfig.loadtest.json"
   },
