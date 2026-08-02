@@ -101,6 +101,8 @@ export function handleSummary(data: any): Record<string, string> {
   const perCLientMax = 100 + 50 * 70;
   const aggregateMax = perCLientMax * MULTI_CLIENT_POOL_SIZE;
 
+  const isolationPassed = totalAllows <= aggregateMax;
+
   const summary = {
     totalRequeests,
     totalAllows,
@@ -108,13 +110,20 @@ export function handleSummary(data: any): Record<string, string> {
     unexpectedStatuses,
     perCLientMax,
     aggregateMax,
-    isolationCheckPassed:
-      totalAllows <= aggregateMax
-        ? "✅ PASS — aggregate allows within bounds"
-        : `❌ FAIL — ${totalAllows} allows exceeded aggregate max ${aggregateMax}`,
+    isolationCheckPassed: isolationPassed
+      ? "✅ PASS — aggregate allows within bounds"
+      : `❌ FAIL — ${totalAllows} allows exceeded aggregate max ${aggregateMax}`,
   };
   console.log("\n=== Tollgate multi-client summary ===");
   console.log(JSON.stringify(summary, null, 2));
+
+  if (!isolationPassed) {
+    throw new Error(
+      `Isolation check FAILED: ${totalAllows} allows exceeded aggregate max ${aggregateMax}. ` +
+        `Client bucket leakage suspected.`,
+    );
+  }
+
   return {
     stdout: JSON.stringify(data, null, 2),
   };
