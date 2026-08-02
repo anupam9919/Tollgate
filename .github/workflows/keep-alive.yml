@@ -1,0 +1,14 @@
+name: Keep Render alive
+
+on:
+  schedule:
+    - cron: '*/14 * * * *'   # every 14 minutes — before Render's 15-min sleep
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping health endpoint
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" ${{ secrets.RENDER_URL }}/health)
+          echo "Health ping → $STATUS"
