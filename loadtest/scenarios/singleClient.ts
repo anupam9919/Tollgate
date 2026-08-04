@@ -66,7 +66,8 @@ export function handleSummary(data: any): Record<string, string> {
   //     throw new Error(`Correctness check FAILED: allowed ${result.actual}, max was ${result.expectedMax}`);
   //   }
 
-  const actualAllows: number = data.metrics.tollgate_allow_total.values.count;
+  const actualAllows: number =
+    data.metrics.tollgate_allow_total?.values?.count ?? 0;
 
   const rps = 50;
   const burst = 100;

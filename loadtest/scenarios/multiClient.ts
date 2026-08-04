@@ -85,10 +85,10 @@ export function handleSummary(data: any): Record<string, string> {
   // global counts; consider adding a `{ client: clientId }` tag to
   // recordRateLimitOutcome() calls if you want per-client breakdowns.
 
-  const totalAllows = data.metrics.tollgate_allow_total.values.count;
-  const totalDenies = data.metrics.tollgate_deny_total.values.count;
-  const unexpectedStatuses =
-    data.metrics.tollgate_unexpected_status_total.values.count;
+const totalAllows = data.metrics.tollgate_allow_total?.values?.count ?? 0;
+const totalDenies = data.metrics.tollgate_deny_total?.values?.count ?? 0;
+const unexpectedStatuses =
+  data.metrics.tollgate_unexpected_status_total?.values?.count ?? 0;
   const totalRequeests = totalAllows + totalDenies + unexpectedStatuses;
 
   console.log(
