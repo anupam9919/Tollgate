@@ -71,7 +71,7 @@ export function handleSummary(data: any): Record<string, string> {
 
   const rps = 50;
   const burst = 100;
-  const durationSeconds = 60;
+  const durationSeconds = 70;
 
   const result = computeTheoreticalMaxAllows({
     rps,
