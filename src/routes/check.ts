@@ -26,6 +26,16 @@ interface ClientConfig {
  *         example: cl123
  *     responses:
  *       200:
+ *         headers:
+ *           X-RateLimit-Limit:
+ *             schema: { type: integer }
+ *             description: Configured requests per second
+ *           X-RateLimit-Remaining:
+ *             schema: { type: integer }
+ *             description: Tokens left in current window
+ *           X-RateLimit-Reset:
+ *             schema: { type: integer }
+ *             description: Unix ms timestamp when bucket resets
  *         description: Request allowed
  *         content:
  *           application/json:
@@ -39,6 +49,14 @@ interface ClientConfig {
  *         description: Client not configured
  *       429:
  *         description: Rate limit exceeded
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 allowed: { type: boolean, example: false }
+ *                 remaining: { type: number, example: 0 }
+ *                 reset: { type: number, example: 1789872681463 }
  */
 router.get("/:clientId", async (req: Request, res: Response) => {
   const { clientId } = req.params;

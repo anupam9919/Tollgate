@@ -39,8 +39,17 @@ function validateAdminRequestBody(body: any):body is AdminRequestBody{
  *           schema:
  *             $ref: '#/components/schemas/ClientConfig'
  *     responses:
- *       200:
+ *        200:
  *         description: Config saved
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message: { type: string, example: Client configuration updated successfully }
+ *                 clientId: { type: string, example: cl123 }
+ *                 config:
+ *                   $ref: '#/components/schemas/ClientConfig'
  *       400:
  *         description: Invalid request body
  */
@@ -73,6 +82,14 @@ router.put('/clients/:clientId',async (req: Request, res: Response) => {
  *     responses:
  *       200:
  *         description: Client config
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 clientId: { type: string, example: cl123 }
+ *                 config:
+ *                   $ref: '#/components/schemas/ClientConfig'
  *       404:
  *         description: Client not found
  */

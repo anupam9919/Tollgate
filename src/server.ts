@@ -13,7 +13,25 @@ app.use(express.json());
 app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.get("/docs.json", (_req, res) => res.json(swaggerSpec));
 
-
+/**
+ * @openapi
+ * /health:
+ *   get:
+ *     summary: Health check
+ *     tags: [System]
+ *     responses:
+ *       200:
+ *         description: Service healthy
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status: { type: string, example: ok }
+ *                 redis: { type: string, example: connected }
+ *       503:
+ *         description: Redis disconnected
+ */
 app.get("/health", async (_req: Request, res: Response) => {
   try {
     await getRedisClient().ping();
