@@ -39,7 +39,7 @@ function validateAdminRequestBody(body: any):body is AdminRequestBody{
  *           schema:
  *             $ref: '#/components/schemas/ClientConfig'
  *     responses:
- *        200:
+ *       200:
  *         description: Config saved
  *         content:
  *           application/json:
