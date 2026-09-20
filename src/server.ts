@@ -3,9 +3,16 @@ import express, { Request, Response } from "express";
 import checkRouter from "./routes/check";
 import adminRouter from "./routes/admin";
 import { connectRedis, getRedisClient } from "./redisClient";
+import swaggerUi from "swagger-ui-express";
+import { swaggerSpec } from "./swagger";
 
 const app = express();
 app.use(express.json());
+
+
+app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.get("/docs.json", (_req, res) => res.json(swaggerSpec));
+
 
 app.get("/health", async (_req: Request, res: Response) => {
   try {

@@ -10,6 +10,36 @@ interface ClientConfig {
   windowSize: number;
 }
 
+
+/**
+ * @openapi
+ * /check/{clientId}:
+ *   get:
+ *     summary: Check rate-limit for a client (consumes one token)
+ *     tags: [Check]
+ *     parameters:
+ *       - in: path
+ *         name: clientId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         example: cl123
+ *     responses:
+ *       200:
+ *         description: Request allowed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 allowed: { type: boolean }
+ *                 remaining: { type: number }
+ *                 reset: { type: number }
+ *       404:
+ *         description: Client not configured
+ *       429:
+ *         description: Rate limit exceeded
+ */
 router.get("/:clientId", async (req: Request, res: Response) => {
   const { clientId } = req.params;
   if (!clientId) {

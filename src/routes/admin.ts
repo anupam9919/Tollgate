@@ -19,6 +19,31 @@ function validateAdminRequestBody(body: any):body is AdminRequestBody{
     )
 }
 
+/**
+ * @openapi
+ * /admin/clients/{clientId}:
+ *   put:
+ *     summary: Set or update rate-limit config for a client
+ *     tags: [Admin]
+ *     parameters:
+ *       - in: path
+ *         name: clientId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         example: cl123
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/ClientConfig'
+ *     responses:
+ *       200:
+ *         description: Config saved
+ *       400:
+ *         description: Invalid request body
+ */
 router.put('/clients/:clientId',async (req: Request, res: Response) => {
     const {clientId} = req.params;
     const body = req.body;
@@ -31,6 +56,26 @@ router.put('/clients/:clientId',async (req: Request, res: Response) => {
     res.status(200).json({message:'Client configuration updated successfully', clientId, config: body});
 });
 
+
+/**
+ * @openapi
+ * /admin/clients/{clientId}:
+ *   get:
+ *     summary: Fetch current config for a client
+ *     tags: [Admin]
+ *     parameters:
+ *       - in: path
+ *         name: clientId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         example: cl123
+ *     responses:
+ *       200:
+ *         description: Client config
+ *       404:
+ *         description: Client not found
+ */
 router.get('/clients/:clientId', async(req:Request, res: Response)=>{
     const {clientId} = req.params;
     const raw = await redisClient.get(`client:${clientId}:algorithm`);
