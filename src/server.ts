@@ -10,7 +10,14 @@ const app = express();
 app.use(express.json());
 
 
-app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use(
+  "/docs",
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec, {
+    swaggerOptions: { syntaxHighlight: true },
+    customCss: ".swagger-ui .markdown p { margin: 4px 0; }",
+  }),
+);
 app.get("/docs.json", (_req, res) => res.json(swaggerSpec));
 
 /**
@@ -41,14 +48,7 @@ app.get("/health", async (_req: Request, res: Response) => {
   }
 });
 
-app.use(
-  "/docs",
-  swaggerUi.serve,
-  swaggerUi.setup(swaggerSpec, {
-    swaggerOptions: { syntaxHighlight: true },
-    customCss: ".swagger-ui .markdown p { margin: 4px 0; }",
-  }),
-);
+
 
 app.use("/check", checkRouter);
 app.use("/admin", adminRouter);
