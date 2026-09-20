@@ -1,11 +1,11 @@
 {
   "name": "tollgate",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "A Redis-backed, networked rate-limiting service with atomic token bucket and sliding-window algorithms.",
+  "main": "dist/server.js",
   "scripts": {
     "dev": "ts-node-dev --respawn src/server.ts",
-    "build": "tsc && cp -r src/lua dist/lua",
+    "build": "tsc && node -e \"require('fs').cpSync('src/lua', 'dist/lua', { recursive: true })\"",
     "start": "node dist/server.js",
     "typecheck:loadtest": "tsc --noEmit -p tsconfig.loadtest.json"
   },
@@ -13,9 +13,17 @@
     "type": "git",
     "url": "git+https://github.com/anupam9919/Tollgate.git"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "redis",
+    "rate-limiting",
+    "typescript",
+    "express",
+    "lua",
+    "api",
+    "load-testing"
+  ],
+  "author": "Anupam Singh",
+  "license": "MIT",
   "type": "commonjs",
   "bugs": {
     "url": "https://github.com/anupam9919/Tollgate/issues"

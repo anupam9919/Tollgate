@@ -21,11 +21,11 @@
 import http from "k6/http";
 import { sleep } from "k6";
 import { Options } from "k6/options";
-import { BASE_URL, SINGLE_CLIENT_ID } from "../config.ts";
+import { BASE_URL, SINGLE_CLIENT_ID } from "../config";
 import {
   computeTheoreticalMaxAllows,
   recordRateLimitOutcome,
-} from "../metrics/rate-limit-metrics.ts";
+} from "../metrics/rate-limit-metrics";
 
 export const options: Options = {
   scenarios: {

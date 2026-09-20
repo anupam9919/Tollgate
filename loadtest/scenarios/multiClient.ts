@@ -22,8 +22,8 @@ import {
   multiClientId,
   MULTI_CLIENT_POOL_SIZE,
   MULTI_CLIENT_PREFIX,
-} from "../config.ts";
-import { recordRateLimitOutcome } from "../metrics/rate-limit-metrics.ts";
+} from "../config";
+import { recordRateLimitOutcome } from "../metrics/rate-limit-metrics";
 
 export const options: Options = {
   scenarios: {
