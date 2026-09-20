@@ -41,6 +41,15 @@ app.get("/health", async (_req: Request, res: Response) => {
   }
 });
 
+app.use(
+  "/docs",
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec, {
+    swaggerOptions: { syntaxHighlight: true },
+    customCss: ".swagger-ui .markdown p { margin: 4px 0; }",
+  }),
+);
+
 app.use("/check", checkRouter);
 app.use("/admin", adminRouter);
 
