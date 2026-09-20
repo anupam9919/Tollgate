@@ -18,7 +18,12 @@ const options: swaggerJsdoc.Options = {
       schemas: {
         ClientConfig: {
           type: "object",
-          required: ["algorithm", "requestPerSecond", "burstSize", "windowSize"],
+          required: [
+            "algorithm",
+            "requestPerSecond",
+            "burstSize",
+            "windowSize",
+          ],
           properties: {
             algorithm: {
               type: "string",
@@ -33,7 +38,7 @@ const options: swaggerJsdoc.Options = {
       },
     },
   },
-  apis: ["./src/routes/*.ts"],
+  apis: ["./dist/routes/*.js"],
 };
 
 export const swaggerSpec = swaggerJsdoc(options);   
