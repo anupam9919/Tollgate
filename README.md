@@ -1,6 +1,15 @@
 # Tollgate
 
-A standalone, networked rate-limiting service — not a library you `import`, a service other backend APIs call into before processing their own requests. Built to learn shared state, atomicity, and correctness under concurrency.
+[![Live API Docs](https://img.shields.io/badge/Live-API%20Docs-4CAF50?logo=swagger&logoColor=white)](https://tollgate-8cj5.onrender.com/docs/)
+[![OpenAPI JSON](https://img.shields.io/badge/OpenAPI-JSON-FF6B6B?logo=openapiinitiative&logoColor=white)](https://tollgate-8cj5.onrender.com/docs.json)
+[![Render Status](https://img.shields.io/badge/Render-Online-25C2A0?logo=render&logoColor=white)](https://tollgate-8cj5.onrender.com/health)
+
+This repo contains the Tollgate service: a standalone, networked rate-limiting service — not a library you `import`, a service other backend APIs call into before processing their own requests. Built to learn shared state, atomicity, and correctness under concurrency.
+
+## Hosted API Docs
+
+- Swagger UI: https://tollgate-8cj5.onrender.com/docs/
+- OpenAPI JSON: https://tollgate-8cj5.onrender.com/docs.json
 
 ---
 
